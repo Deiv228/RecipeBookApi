@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Книга рецептів - Практична 1</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 40px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        ul {
+            margin-top: 20px;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Книга кулінарних рецептів</h1>
+
+    <button id="loadBtn">Load items</button>
+
+    <ul id="itemList"></ul>
+
+    <script>
+        document.getElementById('loadBtn').addEventListener('click', async () => {
+            const apiUrl = 'http://localhost:5225/items';
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error('Помилка сервера');
+
+                const data = await response.json();
+                const list = document.getElementById('itemList');
+                list.innerHTML = '';
+
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = `[ID: ${item.id}] Рецепт: ${item.name}`;
+                    list.appendChild(li);
+                });
+            } catch (err) {
+                console.error(err);
+                alert('Не вдалося отримати дані від API!');
+            }
+        });
+    </script>
+</body>
+</html>
