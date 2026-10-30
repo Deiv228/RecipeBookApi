@@ -1,6 +1,15 @@
-﻿namespace RecipeBookApi.docs
-{
-    public class roadmap
-    {
-    }
-}
+﻿# Roadmap розробки Recipe Book API
+
+## Тиждень 3 (Практична 3: DDD)
+* [ ] Виділення піддоменів (Каталог, Користувачі, Оцінки).
+* [ ] Створення глосарію (Ubiquitous Language).
+* [ ] Прототипування доменних моделей C# у папці `Domain/`.
+
+## Тиждень 4 (Практична 4: API Contract & CRUD)
+* [ ] Складання специфікації OpenAPI (`docs/api/openapi.yaml`).
+* [ ] Перехід на розширений CRUD (`POST`, `PUT`, `DELETE`).
+* [ ] Фіксація архітектурного рішення через ADR (`docs/adr/`).
+
+## Тиждень 5-6 (Практичні 5-6: Error Handling & Docker)
+* [ ] Додавання ідемпотентності, ретраїв та обробки помилок.
+* [ ] Контейнеризація проєкту через `Dockerfile` та `docker-compose`.
