@@ -1,0 +1,6 @@
+﻿namespace RecipeBookApi.docs.api
+{
+    public class openapi
+    {
+    }
+}
