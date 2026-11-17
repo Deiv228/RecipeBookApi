@@ -1,6 +1,102 @@
-﻿namespace RecipeBookApi.docs.api
-{
-    public class openapi
-    {
-    }
-}
+﻿openapi: 3.0.0
+info:
+  title: Recipe Book API
+  version: 1.0.0
+  description: REST API для управління рецептами та інгредієнтами
+paths:
+  /recipes:
+    get:
+      summary: Отримати список усіх рецептів
+      responses:
+        '200':
+          description: Успішне отримання списку
+    post:
+      summary: Створити новий рецепт
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeDto'
+      responses:
+        '201':
+          description: Рецепт успішно створено
+
+  /recipes/{id}:
+    get:
+      summary: Отримати рецепт за ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Рецепт знайдено
+        '404':
+          description: Рецепт не знайдено
+    put:
+      summary: Оновити існуючий рецепт
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecipeDto'
+      responses:
+        '204':
+          description: Успішно оновлено
+        '404':
+          description: Рецепт не знайдено
+    delete:
+      summary: Видалити рецепт
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Рецепт видалено
+        '404':
+          description: Рецепт не знайдено
+
+components:
+  schemas:
+    CreateRecipeDto:
+      type: object
+      required:
+        - title
+        - instructions
+        - cookingTimeMinutes
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: string
+        cookingTimeMinutes:
+          type: integer
+    UpdateRecipeDto:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        instructions:
+          type: string
+        cookingTimeMinutes:
+          type: integer
