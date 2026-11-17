@@ -1,7 +1,9 @@
-using Microsoft.Data.Sqlite;
+using RecipeBookApi.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Налаштування API Explorer та CORS
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -16,61 +18,84 @@ var app = builder.Build();
 
 app.UseCors();
 
-const string connectionString = "Data Source=recipes.db";
+// In-Memory сховище доменних об'єктів для розширеного CRUD у Лабораторній №4
+var recipes = new List<Recipe>();
 
-using (var connection = new SqliteConnection(connectionString))
+// GET: Отримати всі рецепти
+app.MapGet("/recipes", () => Results.Ok(recipes));
+
+// GET: Отримати рецепт за ID
+app.MapGet("/recipes/{id:guid}", (Guid id) =>
 {
-    connection.Open();
+    var recipe = recipes.FirstOrDefault(r => r.Id == id);
+    return recipe is not null ? Results.Ok(recipe) : Results.NotFound();
+});
 
-    var createTableCmd = connection.CreateCommand();
-    createTableCmd.CommandText = @"
-        CREATE TABLE IF NOT EXISTS items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        );
-    ";
-    createTableCmd.ExecuteNonQuery();
-
-    var checkCmd = connection.CreateCommand();
-    checkCmd.CommandText = "SELECT COUNT(*) FROM items;";
-    long count = (long)checkCmd.ExecuteScalar()!;
-
-    if (count == 0)
-    {
-        var insertCmd = connection.CreateCommand();
-        insertCmd.CommandText = @"
-            INSERT INTO items (name) VALUES ('Борщ український');
-            INSERT INTO items (name) VALUES ('Паста Карбонара');
-            INSERT INTO items (name) VALUES ('Сирники з джемом');
-        ";
-        insertCmd.ExecuteNonQuery();
-    }
-}
-
-app.MapGet("/items", () =>
+// POST: Створити новий рецепт
+app.MapPost("/recipes", (CreateRecipeRequest req) =>
 {
-    var items = new List<object>();
+    var recipe = new Recipe(req.Title, req.Description, req.Instructions, req.CookingTimeMinutes, Guid.NewGuid());
 
-    using (var connection = new SqliteConnection(connectionString))
+    if (req.Ingredients is not null)
     {
-        connection.Open();
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT id, name FROM items;";
-
-        using (var reader = cmd.ExecuteReader())
+        foreach (var ing in req.Ingredients)
         {
-            while (reader.Read())
-            {
-                items.Add(new
-                {
-                    id = reader.GetInt32(0),
-                    name = reader.GetString(1)
-                });
-            }
+            recipe.AddIngredient(new Ingredient(ing.Name, ing.Amount, ing.Unit));
         }
     }
 
-    return Results.Ok(items);
+    recipes.Add(recipe);
+    return Results.Created($"/recipes/{recipe.Id}", recipe);
+});
+
+// PUT: Оновити рецепт
+app.MapPut("/recipes/{id:guid}", (Guid id, UpdateRecipeRequest req) =>
+{
+    var recipe = recipes.FirstOrDefault(r => r.Id == id);
+    if (recipe is null) return Results.NotFound();
+
+    recipes.Remove(recipe);
+    var updated = new Recipe(req.Title, req.Description, req.Instructions, req.CookingTimeMinutes, recipe.AuthorId);
+
+    if (req.Ingredients is not null)
+    {
+        foreach (var ing in req.Ingredients)
+        {
+            updated.AddIngredient(new Ingredient(ing.Name, ing.Amount, ing.Unit));
+        }
+    }
+
+    recipes.Add(updated);
+    return Results.NoContent();
+});
+
+// DELETE: Видалити рецепт
+app.MapDelete("/recipes/{id:guid}", (Guid id) =>
+{
+    var recipe = recipes.FirstOrDefault(r => r.Id == id);
+    if (recipe is null) return Results.NotFound();
+
+    recipes.Remove(recipe);
+    return Results.NoContent();
 });
 
 app.Run();
+
+// DTO для запитів
+public record CreateRecipeRequest(
+    string Title,
+    string Description,
+    string Instructions,
+    int CookingTimeMinutes,
+    List<IngredientRequest>? Ingredients
+);
+
+public record UpdateRecipeRequest(
+    string Title,
+    string Description,
+    string Instructions,
+    int CookingTimeMinutes,
+    List<IngredientRequest>? Ingredients
+);
+
+public record IngredientRequest(string Name, double Amount, string Unit);
