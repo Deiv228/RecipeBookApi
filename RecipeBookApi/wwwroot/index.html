@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecipeBookApi — Lab 5 Resilience Demo</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 15px;
+            background: #121212;
+            color: #f0f0f0;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        button {
+            cursor: pointer;
+            background: #0078d4;
+            border: none;
+            font-weight: bold;
+        }
+
+            button:hover:not(:disabled) {
+                background: #005a9e;
+            }
+
+            button:disabled {
+                background: #555;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
+        .degraded-banner {
+            display: none;
+            background: #8b0000;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            border: 2px solid #ff4d4d;
+        }
+
+        .log {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 350px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>RecipeBookApi — Тест відмовостійкості (Лаба 5)</h1>
+
+    <div id="degradedBanner" class="degraded-banner">
+        ⚠️ УВАГА: Сервер перевантажено (Degraded Mode). Кнопки тимчасово заблоковані на 5 секунд...
+    </div>
+
+    <div class="card">
+        <h3>1. Налаштування підключення</h3>
+        <label>URL Бекенду (перевір порт у консолі Visual Studio):</label><br>
+        <input type="text" id="apiUrl" value="" style="width: 300px;" placeholder="Автоматично (поточний сервер)">
+        <button id="btnHealth" onclick="checkHealth()">Перевірити /health (таймаут 1с)</button>
+    </div>
+
+    <div class="card">
+        <h3>2. Створення рецепта (Ідемпотентність + Ретраї + Backoff)</h3>
+        <input type="text" id="recipeTitle" value="Борщ український" placeholder="Назва рецепта"><br>
+        <button id="btnCreate" onclick="submitRecipe()">Створити рецепт (POST)</button>
+        <button id="btnDouble" onclick="testDoubleClick()">Тест подвійного кліку (2 паралельні POST)</button>
+        <button id="btnSpam" onclick="testRateLimit()">Спам 10 запитів (Тест 429 Rate-Limit)</button>
+    </div>
+
+    <div class="card">
+        <h3>Логи виконання (X-Request-Id, ретраї, помилки):</h3>
+        <button onclick="document.getElementById('log').innerText = ''">Очистити логи</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        let consecutiveFailures = 0;
+        const DEGRADED_THRESHOLD = 3;
+
+        function log(msg) {
+            const el = document.getElementById("log");
+            const time = new Date().toLocaleTimeString();
+            el.innerText = `[${time}] ${msg}\n` + el.innerText;
+        }
+
+        function setButtonsDisabled(disabled) {
+            document.getElementById("btnCreate").disabled = disabled;
+            document.getElementById("btnDouble").disabled = disabled;
+            document.getElementById("btnSpam").disabled = disabled;
+        }
+
+        function recordSuccess() {
+            consecutiveFailures = 0;
+            document.getElementById("degradedBanner").style.display = "none";
+        }
+
+        function recordFailure() {
+            consecutiveFailures++;
+            if (consecutiveFailures >= DEGRADED_THRESHOLD) {
+                log(`🚨 DEGRADED MODE АКТИВОВАНО (${consecutiveFailures} збоїв поспіль)!`);
+                document.getElementById("degradedBanner").style.display = "block";
+                setButtonsDisabled(true);
+                setTimeout(() => {
+                    consecutiveFailures = 0;
+                    document.getElementById("degradedBanner").style.display = "none";
+                    setButtonsDisabled(false);
+                    log("✅ Degraded Mode знято. Кнопки знову активні.");
+                }, 5000);
+            }
+        }
+
+        async function payloadHash(obj) {
+            const data = new TextEncoder().encode(JSON.stringify(obj));
+            const digest = await crypto.subtle.digest("SHA-256", data);
+            return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+        }
+
+        async function getOrReuseKey(payload) {
+            const h = await payloadHash(payload);
+            const existing = localStorage.getItem(`idem:${h}`);
+            if (existing) return existing;
+            const fresh = crypto.randomUUID();
+            localStorage.setItem(`idem:${h}`, fresh);
+            return fresh;
+        }
+
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        const backoff = (base, attempt, jitter) => base * (2 ** attempt) + (jitter ? Math.floor(Math.random() * 150) : 0);
+
+        async function fetchWithResilience(url, opts = {}, attempt = 0) {
+            const { retries = 2, baseDelayMs = 300, timeoutMs = 1500, jitter = true } = opts.retry || {};
+            const reqId = opts.requestId || crypto.randomUUID();
+
+            const headers = new Headers(opts.headers || {});
+            headers.set("Content-Type", "application/json");
+            headers.set("X-Request-Id", reqId);
+            if (opts.idempotencyKey) headers.set("Idempotency-Key", opts.idempotencyKey);
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                log(`➡️ Запит ${opts.method || 'GET'} ${url} | ReqId: ${reqId.slice(0, 8)} | Спроба: ${attempt + 1}`);
+                const res = await fetch(url, { ...opts, headers, signal: controller.signal });
+                clearTimeout(timer);
+
+                const serverReqId = res.headers.get("X-Request-Id") || reqId;
+
+                if (res.status === 429 && retries > 0) {
+                    const retryAfterSec = Number(res.headers.get("Retry-After") || 2);
+                    log(`⏳ 429 Too Many Requests (ReqId: ${serverReqId.slice(0, 8)}). Чекаємо ${retryAfterSec}с по Retry-After...`);
+                    await sleep(retryAfterSec * 1000);
+                    return fetchWithResilience(url, { ...opts, requestId: reqId, retry: { ...opts.retry, retries: retries - 1 } }, attempt + 1);
+                }
+
+                if ([500, 502, 503, 504].includes(res.status) && retries > 0) {
+                    const delay = backoff(baseDelayMs, attempt, jitter);
+                    log(`⚠️ Помилка сервера ${res.status} (ReqId: ${serverReqId.slice(0, 8)}). Ретрай через ${delay}мс...`);
+                    await sleep(delay);
+                    return fetchWithResilience(url, { ...opts, requestId: reqId, retry: { ...opts.retry, retries: retries - 1 } }, attempt + 1);
+                }
+
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    log(`❌ Фінальна помилка ${res.status}: ${JSON.stringify(errBody)}`);
+                    recordFailure();
+                    return res;
+                }
+
+                recordSuccess();
+                return res;
+
+            } catch (err) {
+                clearTimeout(timer);
+                const reason = err.name === "AbortError" ? `Таймаут (${timeoutMs}мс)` : err.message;
+                if (retries > 0) {
+                    const delay = backoff(baseDelayMs, attempt, jitter);
+                    log(`🔌 Збій: ${reason}. Ретрай через ${delay}мс...`);
+                    await sleep(delay);
+                    return fetchWithResilience(url, { ...opts, requestId: reqId, retry: { ...opts.retry, retries: retries - 1 } }, attempt + 1);
+                }
+                log(`💥 Всі спроби вичерпано: ${reason}`);
+                recordFailure();
+                throw err;
+            }
+        }
+
+        async function checkHealth() {
+            const baseUrl = document.getElementById("apiUrl").value;
+            try {
+                const res = await fetchWithResilience(`${baseUrl}/health`, {
+                    method: "GET",
+                    retry: { retries: 0, timeoutMs: 1000 }
+                });
+                const data = await res.json();
+                log(`💚 /health OK: ${JSON.stringify(data)}`);
+            } catch (e) {
+                log(`💔 /health не встиг за 1с або впав!`);
+            }
+        }
+
+        async function submitRecipe() {
+            const baseUrl = document.getElementById("apiUrl").value;
+            const title = document.getElementById("recipeTitle").value;
+            const payload = { title, description: "Смачний рецепт", instructions: "Зварити та подавати", cookingTimeMinutes: 45 };
+
+            const idemKey = await getOrReuseKey(payload);
+            log(`🔑 Використано Idempotency-Key: ${idemKey}`);
+
+            try {
+                const res = await fetchWithResilience(`${baseUrl}/recipes`, {
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                    idempotencyKey: idemKey,
+                    retry: { retries: 2, baseDelayMs: 300, timeoutMs: 1500, jitter: true }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    log(`✅ Успіх (201): Створено/повернуто рецепт ID = ${data.id}`);
+                }
+            } catch (e) { }
+        }
+
+        async function testDoubleClick() {
+            const baseUrl = document.getElementById("apiUrl").value;
+            const payload = { title: "Вареники з вишнею " + Math.floor(Math.random() * 100), description: "Тест", instructions: "Ліпити", cookingTimeMinutes: 30 };
+            const idemKey = await getOrReuseKey(payload);
+
+            log(`⚡ Відправляємо 2 паралельні запити з однаковим ключем: ${idemKey.slice(0, 8)}...`);
+            const [res1, res2] = await Promise.all([
+                fetchWithResilience(`${baseUrl}/recipes`, { method: "POST", body: JSON.stringify(payload), idempotencyKey: idemKey, retry: { retries: 2, timeoutMs: 2500 } }),
+                fetchWithResilience(`${baseUrl}/recipes`, { method: "POST", body: JSON.stringify(payload), idempotencyKey: idemKey, retry: { retries: 2, timeoutMs: 2500 } })
+            ]);
+
+            if (res1?.ok && res2?.ok) {
+                const d1 = await res1.json();
+                const d2 = await res2.json();
+                log(`🎯 Результат подвійного кліку: ID1 = ${d1.id} | ID2 = ${d2.id} (Ідентичні!)`);
+            }
+        }
+
+        async function testRateLimit() {
+            const baseUrl = document.getElementById("apiUrl").value;
+            log(`🚀 Запускаємо 10 швидких запитів на /health для перевірки 429...`);
+            for (let i = 0; i < 10; i++) {
+                fetchWithResilience(`${baseUrl}/health`, { method: "GET", retry: { retries: 1, timeoutMs: 2500 } }).catch(() => { });
+            }
+        }
+    </script>
+</body>
+</html>
