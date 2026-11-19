@@ -1,0 +1,17 @@
+﻿services:
+  recipebook-api:
+    build:
+      context: .
+      dockerfile: RecipeBookApi/Dockerfile
+    container_name: recipebook-api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+    volumes:
+      - recipebook_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  recipebook_data:
