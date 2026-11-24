@@ -1,5 +1,12 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text.Json;
 using RecipeBookApi.Domain;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,12 +20,91 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .WithExposedHeaders("X-Request-Id", "Retry-After");
     });
+});
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("recipebook-api"))
+    .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = new Uri("http://localhost:4318/v1/traces");
+            opt.Protocol = OtlpExportProtocol.HttpProtobuf;
+        }))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(opt =>
+        {
+            opt.Endpoint = new Uri("http://localhost:4318/v1/metrics");
+            opt.Protocol = OtlpExportProtocol.HttpProtobuf;
+        }));
+
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+builder.Logging.AddOpenTelemetry(logging =>
+{
+    logging.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("recipebook-api"));
+    logging.IncludeFormattedMessage = true;
+    logging.IncludeScopes = true;
+    logging.AddOtlpExporter(opt =>
+    {
+        opt.Endpoint = new Uri("http://localhost:4318/v1/logs");
+        opt.Protocol = OtlpExportProtocol.HttpProtobuf;
     });
+});
 
 var app = builder.Build();
 app.UseCors();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+var lokiClient = new HttpClient();
+app.Use(async (context, next) =>
+{
+    var sw = Stopwatch.StartNew();
+    await next();
+    sw.Stop();
+
+    var traceId = Activity.Current?.TraceId.ToString() ?? "";
+    var nsTimestamp = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1_000_000L).ToString();
+    var logMsg = JsonSerializer.Serialize(new
+    {
+        ts = DateTime.UtcNow.ToString("o"),
+        level = context.Response.StatusCode >= 500 ? "error" : "info",
+        service = "recipebook-api",
+        method = context.Request.Method,
+        route = context.Request.Path.Value,
+        status = context.Response.StatusCode,
+        duration_ms = sw.ElapsedMilliseconds,
+        trace_id = traceId,
+        msg = "http request complete"
+    });
+
+    var payload = new
+    {
+        streams = new[]
+        {
+            new
+            {
+                stream = new Dictionary<string, string>
+                {
+                    ["service"] = "recipebook-api",
+                    ["exporter"] = "OTLP"
+                },
+                values = new[] { new[] { nsTimestamp, logMsg } }
+            }
+        }
+    };
+
+    try
+    {
+        await lokiClient.PostAsJsonAsync("http://localhost:3100/loki/api/v1/push", payload);
+    }
+    catch
+    {
+        // Ігноруємо помилки мережі, якщо Loki тимчасово недоступний
+    }
+});
 
 var recipes = new List<Recipe>();
 var idempotencyStore = new ConcurrentDictionary<string, Recipe>();
