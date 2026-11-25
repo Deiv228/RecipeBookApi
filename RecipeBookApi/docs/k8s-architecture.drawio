@@ -1,0 +1,243 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Сторінка-1" id="AlWxNfhK8TSUbp3mq9MM">
+    <mxGraphModel dx="1439" dy="1254" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;flowchart TB\n    Client[\&quot;User / Client&lt;br/&gt;(Browser / Mobile App)\&quot;]\n    DNS[\&quot;DNS&lt;br/&gt;api.recipebook.local\&quot;]\n    LB[\&quot;Cloud Load Balancer&lt;br/&gt;(External IP)\&quot;]\n\n    subgraph DevOps[\&quot;CI/CD &amp; Container Registry\&quot;]\n        Git[\&quot;Git Repository&lt;br/&gt;github.com/Deiv228/RecipeBookApi\&quot;]\n        CICD[\&quot;CI/CD Pipeline (GitHub Actions)&lt;br/&gt;Build &amp; Push Docker Image\&quot;]\n        Registry[\&quot;Container Registry (GHCR)&lt;br/&gt;ghcr.io/deiv228/recipebookapi-api:1.0.0\&quot;]\n    end\n\n    subgraph K8s[\&quot;Kubernetes Cluster\&quot;]\n        Ingress[\&quot;Ingress Controller&lt;br/&gt;Host: api.recipebook.local&lt;br/&gt;Path: /recipes, /health → recipebook-svc:80\&quot;]\n\n        subgraph Nodes[\&quot;Worker Nodes (Node 1, Node 2)\&quot;]\n            subgraph NS[\&quot;Namespace: recipebook-prod\&quot;]\n                InternalSvc[\&quot;Other Internal Service&lt;br/&gt;(Web Frontend / Worker)\&quot;]\n                Service[\&quot;Service: recipebook-svc&lt;br/&gt;Type: ClusterIP (Port 80 → 8080)\&quot;]\n                Deployment[\&quot;Deployment: recipebook-api&lt;br/&gt;Replicas: 3 | Image: recipebookapi-api:1.0.0\&quot;]\n\n                subgraph Pods[\&quot;Pods\&quot;]\n                    Pod1[\&quot;Pod 1&lt;br/&gt;Container: recipebookapi-api:1.0.0\&quot;]\n                    Pod2[\&quot;Pod 2&lt;br/&gt;Container: recipebookapi-api:1.0.0\&quot;]\n                    Pod3[\&quot;Pod 3&lt;br/&gt;Container: recipebookapi-api:1.0.0\&quot;]\n                end\n            end\n        end\n    end\n\n    Client --&gt;|\&quot;HTTPS\&quot;| DNS\n    DNS --&gt;|\&quot;Resolves IP\&quot;| LB\n    LB --&gt;|\&quot;Traffic\&quot;| Ingress\n    Ingress --&gt;|\&quot;Routes /recipes, /health\&quot;| Service\n    InternalSvc -.-&gt;|\&quot;Internal DNS: http://recipebook-svc\&quot;| Service\n    Service --&gt;|\&quot;Load balances\&quot;| Pod1\n    Service --&gt;|\&quot;Load balances\&quot;| Pod2\n    Service --&gt;|\&quot;Load balances\&quot;| Pod3\n\n    Git --&gt;|\&quot;1. git push\&quot;| CICD\n    CICD --&gt;|\&quot;2. docker push\&quot;| Registry\n    Registry -.-&gt;|\&quot;3. Pulls image on start\&quot;| Deployment\n    Deployment --- Pod1\n    Deployment --- Pod2\n    Deployment --- Pod3&quot;,&#xa;  &quot;config&quot;: null,&#xa;  &quot;version&quot;: &quot;12&quot;&#xa;}" id="swcXQQEMUCHSXDdicJuu-1">
+          <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
+            <mxGeometry as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Kubernetes Cluster" mermaidId="n:K8s" mermaidBaseStyle="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#F0FDFA;strokeColor=#2DD4BF;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Kubernetes Cluster" id="swcXQQEMUCHSXDdicJuu-2">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-1" style="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#F0FDFA;strokeColor=#2DD4BF;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="1301" width="786" x="30" y="998" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Worker Nodes (Node 1, Node 2)" mermaidId="n:Nodes" mermaidBaseStyle="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#FFF7ED;strokeColor=#FB923C;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Worker Nodes (Node 1, Node 2)" id="swcXQQEMUCHSXDdicJuu-3">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-2" style="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#FFF7ED;strokeColor=#FB923C;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="959" width="738" x="24" y="319" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Namespace: recipebook-prod" mermaidId="n:NS" mermaidBaseStyle="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#ECFEFF;strokeColor=#22D3EE;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Namespace: recipebook-prod" id="swcXQQEMUCHSXDdicJuu-4">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-3" style="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#ECFEFF;strokeColor=#22D3EE;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="877" width="690" x="24" y="58" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Pods" mermaidId="n:Pods" mermaidBaseStyle="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#F0FDF4;strokeColor=#4ADE80;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Pods" id="swcXQQEMUCHSXDdicJuu-5">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-4" style="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#F0FDF4;strokeColor=#4ADE80;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="180" width="604" x="62" y="673" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Pod 1&#xa;Container: recipebookapi-api:1.0.0" mermaidId="n:Pod1" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Pod 1&#xa;Container: recipebookapi-api:1.0.0" id="swcXQQEMUCHSXDdicJuu-6">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-5" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="226" y="48" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Pod 2&#xa;Container: recipebookapi-api:1.0.0" mermaidId="n:Pod2" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Pod 2&#xa;Container: recipebookapi-api:1.0.0" id="swcXQQEMUCHSXDdicJuu-7">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-5" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="428" y="48" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Pod 3&#xa;Container: recipebookapi-api:1.0.0" mermaidId="n:Pod3" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Pod 3&#xa;Container: recipebookapi-api:1.0.0" id="swcXQQEMUCHSXDdicJuu-8">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-5" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="24" y="48" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Other Internal Service&#xa;(Web Frontend / Worker)" mermaidId="n:InternalSvc" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Other Internal Service&#xa;(Web Frontend / Worker)" id="swcXQQEMUCHSXDdicJuu-9">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-4" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="217" y="48" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Service: recipebook-svc&#xa;Type: ClusterIP (Port 80 → 8080)" mermaidId="n:Service" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Service: recipebook-svc&#xa;Type: ClusterIP (Port 80 → 8080)" id="swcXQQEMUCHSXDdicJuu-10">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-4" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="333" y="261" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Deployment: recipebook-api&#xa;Replicas: 3 | Image: recipebookapi-api:1.0.0" mermaidId="n:Deployment" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Deployment: recipebook-api&#xa;Replicas: 3 | Image: recipebookapi-api:1.0.0" id="swcXQQEMUCHSXDdicJuu-11">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-4" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="150" width="152" x="172" y="441" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Internal DNS: http://recipebook-svc" mermaidId="e:InternalSvc-&gt;Service#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;dashed=1;dashPattern=2 2;fixDash=1;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.36;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Internal DNS: http://recipebook-svc" id="swcXQQEMUCHSXDdicJuu-12">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;dashed=1;dashPattern=2 2;fixDash=1;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.36;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-10">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="293" y="231" />
+                <mxPoint x="387" y="231" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Load balances" mermaidId="e:Service-&gt;Pod1#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Load balances" id="swcXQQEMUCHSXDdicJuu-13">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-6">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="409" y="411" />
+                <mxPoint x="442" y="411" />
+                <mxPoint x="442" y="633" />
+                <mxPoint x="385" y="633" />
+                <mxPoint x="385" y="663" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Load balances" mermaidId="e:Service-&gt;Pod2#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.71;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Load balances" id="swcXQQEMUCHSXDdicJuu-14">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.71;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-7">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="442" y="399" />
+                <mxPoint x="602" y="399" />
+                <mxPoint x="602" y="621" />
+                <mxPoint x="587" y="621" />
+                <mxPoint x="587" y="663" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Load balances" mermaidId="e:Service-&gt;Pod3#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.29;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Load balances" id="swcXQQEMUCHSXDdicJuu-15">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.29;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-8">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="376" y="399" />
+                <mxPoint x="73" y="399" />
+                <mxPoint x="73" y="633" />
+                <mxPoint x="183" y="633" />
+                <mxPoint x="183" y="663" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:Deployment-&gt;Pod1#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=none;jumpStyle=arc;jumpSize=12;strokeColor=#000000;exitX=0.5;exitY=1;entryX=0.35;entryY=0;strokeWidth=2;" mermaidBaseValue="" id="swcXQQEMUCHSXDdicJuu-16">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=none;jumpStyle=arc;jumpSize=12;strokeColor=#000000;exitX=0.5;exitY=1;entryX=0.35;entryY=0;strokeWidth=2;" target="swcXQQEMUCHSXDdicJuu-6">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="248" y="633" />
+                <mxPoint x="342" y="633" />
+                <mxPoint x="342" y="663" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:Deployment-&gt;Pod2#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=none;jumpStyle=arc;jumpSize=12;strokeColor=#000000;exitX=0.71;exitY=1;entryX=0.35;entryY=0;strokeWidth=2;" mermaidBaseValue="" id="swcXQQEMUCHSXDdicJuu-17">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=none;jumpStyle=arc;jumpSize=12;strokeColor=#000000;exitX=0.71;exitY=1;entryX=0.35;entryY=0;strokeWidth=2;" target="swcXQQEMUCHSXDdicJuu-7">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="281" y="621" />
+                <mxPoint x="544" y="621" />
+                <mxPoint x="544" y="663" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:Deployment-&gt;Pod3#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=none;jumpStyle=arc;jumpSize=12;strokeColor=#000000;exitX=0.29;exitY=1;entryX=0.35;entryY=0;strokeWidth=2;" mermaidBaseValue="" id="swcXQQEMUCHSXDdicJuu-18">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-4" source="swcXQQEMUCHSXDdicJuu-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=none;jumpStyle=arc;jumpSize=12;strokeColor=#000000;exitX=0.29;exitY=1;entryX=0.35;entryY=0;strokeWidth=2;" target="swcXQQEMUCHSXDdicJuu-8">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="215" y="621" />
+                <mxPoint x="140" y="621" />
+                <mxPoint x="140" y="663" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Ingress Controller&#xa;Host: api.recipebook.local&#xa;Path: /recipes, /health → recipebook-svc:80" mermaidId="n:Ingress" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Ingress Controller&#xa;Host: api.recipebook.local&#xa;Path: /recipes, /health → recipebook-svc:80" id="swcXQQEMUCHSXDdicJuu-19">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-2" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="192" width="152" x="403" y="48" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Routes /recipes, /health" mermaidId="e:Ingress-&gt;Service#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Routes /recipes, /health" id="swcXQQEMUCHSXDdicJuu-20">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-2" source="swcXQQEMUCHSXDdicJuu-19" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.64;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-10">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="CI/CD &amp; Container Registry" mermaidId="n:DevOps" mermaidBaseStyle="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#FDF4FF;strokeColor=#E879F9;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="CI/CD &amp; Container Registry" id="swcXQQEMUCHSXDdicJuu-21">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-1" style="html=1;whiteSpace=nowrap;strokeWidth=1;verticalAlign=top;fillColor=#FDF4FF;strokeColor=#E879F9;fontColor=#000000;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="492" width="200" x="129" y="385" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Git Repository&#xa;github.com/Deiv228/RecipeBookApi" mermaidId="n:Git" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Git Repository&#xa;github.com/Deiv228/RecipeBookApi" id="swcXQQEMUCHSXDdicJuu-22">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-21" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="67" width="152" x="24" y="48" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="CI/CD Pipeline (GitHub Actions)&#xa;Build &amp; Push Docker Image" mermaidId="n:CICD" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="CI/CD Pipeline (GitHub Actions)&#xa;Build &amp; Push Docker Image" id="swcXQQEMUCHSXDdicJuu-23">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-21" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="24" y="184" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Container Registry (GHCR)&#xa;ghcr.io/deiv228/recipebookapi-api:1.0.0" mermaidId="n:Registry" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Container Registry (GHCR)&#xa;ghcr.io/deiv228/recipebookapi-api:1.0.0" id="swcXQQEMUCHSXDdicJuu-24">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-21" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="108" width="152" x="24" y="360" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="1. git push" mermaidId="e:Git-&gt;CICD#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="1. git push" id="swcXQQEMUCHSXDdicJuu-25">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-21" source="swcXQQEMUCHSXDdicJuu-22" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-23">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="2. docker push" mermaidId="e:CICD-&gt;Registry#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="2. docker push" id="swcXQQEMUCHSXDdicJuu-26">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-21" source="swcXQQEMUCHSXDdicJuu-23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-24">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="User / Client&#xa;(Browser / Mobile App)" mermaidId="n:Client" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="User / Client&#xa;(Browser / Mobile App)" id="swcXQQEMUCHSXDdicJuu-27">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-1" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="87" width="152" x="433" y="30" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="DNS&#xa;api.recipebook.local" mermaidId="n:DNS" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="DNS&#xa;api.recipebook.local" id="swcXQQEMUCHSXDdicJuu-28">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-1" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="67" width="152" x="433" y="218" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="Cloud Load Balancer&#xa;(External IP)" mermaidId="n:LB" mermaidBaseStyle="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;" mermaidBaseValue="Cloud Load Balancer&#xa;(External IP)" id="swcXQQEMUCHSXDdicJuu-29">
+          <mxCell parent="swcXQQEMUCHSXDdicJuu-1" style="html=1;whiteSpace=wrap;strokeWidth=2;fillColor=#ffffff;strokeColor=#28253D;fontColor=#28253D;fontFamily=Recursive;fontSize=14;shadow=1;shadowColor=#000000;shadowOffsetX=4;shadowOffsetY=4;shadowBlur=0;shadowOpacity=6;labelWidth=120;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" vertex="1">
+            <mxGeometry height="87" width="152" x="433" y="593" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="HTTPS" mermaidId="e:Client-&gt;DNS#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="HTTPS" id="swcXQQEMUCHSXDdicJuu-30">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-1" source="swcXQQEMUCHSXDdicJuu-27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-28">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Resolves IP" mermaidId="e:DNS-&gt;LB#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Resolves IP" id="swcXQQEMUCHSXDdicJuu-31">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-1" source="swcXQQEMUCHSXDdicJuu-28" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-29">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="Traffic" mermaidId="e:LB-&gt;Ingress#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="Traffic" id="swcXQQEMUCHSXDdicJuu-32">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-1" source="swcXQQEMUCHSXDdicJuu-29" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=0.99;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-19">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points" />
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="3. Pulls image on start" mermaidId="e:Registry-&gt;Deployment#0" mermaidBaseStyle="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;dashed=1;dashPattern=2 2;fixDash=1;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=16;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;" mermaidBaseValue="3. Pulls image on start" id="swcXQQEMUCHSXDdicJuu-33">
+          <mxCell edge="1" parent="swcXQQEMUCHSXDdicJuu-1" source="swcXQQEMUCHSXDdicJuu-24" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=0;dashed=1;dashPattern=2 2;fixDash=1;startArrow=none;endArrow=block;endSize=8;jumpStyle=arc;jumpSize=12;strokeColor=#000000;html=1;fontSize=14;labelBackgroundColor=#cccccc;fontFamily=Recursive;fontColor=#28253D;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeWidth=2;targetPerimeterSpacing=4;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DRecursive;" target="swcXQQEMUCHSXDdicJuu-11">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="229" y="887" />
+                <mxPoint x="229" y="988" />
+                <mxPoint x="229" y="1307" />
+                <mxPoint x="229" y="1365" />
+                <mxPoint x="229" y="1785" />
+                <mxPoint x="326" y="1785" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
